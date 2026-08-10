@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F2F2F7">
+<title>形体改善</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root {
+  --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E;
+  --sub: #8E8E93; --sep: #E5E5EA;
+  --blue: #007AFF; --green: #34C759; --green-light: #F0FAF2;
+  --red: #FF3B30; --gold: #FF9500;
+  --r: 12px; --rl: 16px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; min-height: 100dvh;
+  padding: 0 16px 40px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; -webkit-user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── TOP BAR ── */
+.top-bar {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 44px 4px 0; margin-bottom: 12px;
+}
+.top-bar .tb-left { flex: 1; }
+.top-bar .tb-tag {
+  display: inline-block; font-size: 11px; font-weight: 600; color: var(--blue);
+  background: #E8F2FF; padding: 3px 8px; border-radius: 8px; margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+.top-bar h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.3px; }
+.top-bar .tb-date { font-size: 12px; color: var(--sub); margin-top: 2px; }
+.top-bar .tb-streak { font-size: 12px; color: var(--sub); }
+
+/* Mini ring */
+.mini-ring-wrap {
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0; padding-top: 8px;
+}
+.mini-ring-right { text-align: right; }
+.mini-ring-pct { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.mini-ring-msg { font-size: 11px; color: var(--sub); white-space: nowrap; }
+
+/* ── PHASE COLLAPSIBLE ── */
+.phase-toggle {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 600; color: var(--sub);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 6px 4px; cursor: pointer; margin-bottom: 10px;
+}
+.phase-toggle .pt-arrow { font-size: 10px; transition: transform 0.2s; }
+.phase-toggle.open .pt-arrow { transform: rotate(90deg); }
+.phase-body {
+  background: var(--card); border-radius: var(--r);
+  padding: 0; max-height: 0; overflow: hidden;
+  margin-bottom: 0; transition: all 0.3s ease;
+}
+.phase-body.open { max-height: 300px; padding: 14px 16px; margin-bottom: 16px; }
+.phase-body .phase-head { font-size: 12px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.phase-body .phase-goal {
+  display: flex; align-items: flex-start; gap: 6px;
+  font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 3px;
+}
+.phase-body .phase-goal .pg-dot { font-size: 8px; flex-shrink: 0; margin-top: 6px; color: var(--sub); }
+.phase-body .phase-weight { font-size: 12px; color: var(--sub); margin-top: 8px; padding-top: 8px; border-top: 0.5px solid var(--sep); }
+
+/* ── TASK SECTION ── */
+.sec { font-size: 13px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; padding: 0 4px; margin-bottom: 8px; }
+
+/* ── TASK CARD ── */
+.task-card {
+  background: var(--card); border-radius: var(--r);
+  padding: 0 14px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 10px;
+  min-height: 56px; position: relative;
+  transition: background 0.2s;
+}
+.task-card:active { background: #F2F2F7; }
+.task-card.done { background: var(--green-light); }
+.task-card.half-done { background: #F7FCF8; }
+.task-card .t-icon { font-size: 24px; flex-shrink: 0; width: 32px; text-align: center; }
+.task-card .t-body { flex: 1; padding: 10px 0; cursor: pointer; }
+.task-card .t-name { font-size: 16px; font-weight: 500; }
+.task-card .t-sub  { font-size: 12px; color: var(--sub); margin-top: 1px; }
+.task-card .t-info {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--sub); cursor: pointer;
+  transition: all 0.15s;
+}
+.task-card .t-info:active { background: #E5E5EA; color: var(--text); }
+
+.check-circle {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid #C7C7CC; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 12px; color: transparent; cursor: pointer;
+}
+.done .check-circle { background: var(--green); border-color: var(--green); color: #fff; transform: scale(1.12); }
+
+.half-wrap { display: flex; gap: 3px; flex-shrink: 0; }
+.half-col { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.half-col .half-label { font-size: 9px; color: var(--sub); }
+.half-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid #C7C7CC; cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.half-dot.on { background: var(--green); border-color: var(--green); transform: scale(1.12); }
+
+/* ── EXPAND ── */
+.expand-card { background: var(--card); border-radius: var(--r); margin-bottom: 8px; overflow: hidden; }
+.expand-card.half-done { background: #F7FCF8; }
+.expand-card.done { background: var(--green-light); }
+.expand-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 14px; min-height: 56px;
+}
+.expand-head .t-icon { font-size: 24px; flex-shrink: 0; width: 32px; text-align: center; }
+.expand-head .t-body { flex: 1; padding: 10px 0; cursor: pointer; }
+.expand-head .t-name { font-size: 16px; font-weight: 500; }
+.expand-head .t-sub  { font-size: 12px; color: var(--sub); margin-top: 1px; }
+.expand-arrow { font-size: 10px; color: var(--sub); transition: transform 0.25s; flex-shrink: 0; }
+.expand-card.open .expand-arrow { transform: rotate(180deg); }
+.expand-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.expand-card.open .expand-body { max-height: 450px; }
+.expand-body .sub-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px 9px 48px; border-top: 0.5px solid var(--sep);
+  cursor: pointer; font-size: 14px; color: var(--sub);
+  transition: all 0.15s;
+}
+.sub-item:active { background: #F2F2F7; }
+.sub-item.done { color: var(--green); font-weight: 500; }
+.mini-check {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid #C7C7CC; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: transparent; transition: all 0.2s;
+}
+.sub-item.done .mini-check { background: var(--green); border-color: var(--green); color: #fff; }
+.expand-head .t-info {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--sub); cursor: pointer;
+  transition: all 0.15s;
+}
+.expand-head .t-info:active { background: #E5E5EA; color: var(--text); }
+
+/* ── TIP ── */
+.tip-banner {
+  background: var(--card); border-radius: var(--r);
+  padding: 12px 14px; margin-bottom: 16px;
+  font-size: 13px; color: var(--text);
+  display: flex; align-items: flex-start; gap: 8px;
+  line-height: 1.5; transition: all 0.3s;
+}
+.tip-banner .tip-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.tip-banner.done-all { background: #FFF9F0; }
+
+/* ── WEEK GRID ── */
+.week-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;
+  background: var(--card); border-radius: var(--rl);
+  padding: 14px 10px; margin-bottom: 16px;
+}
+.day-cell { text-align: center; }
+.day-cell .day-label { font-size: 10px; font-weight: 600; color: var(--sub); margin-bottom: 3px; }
+.day-dot {
+  width: 32px; height: 32px; border-radius: 50%;
+  margin: 0 auto; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; transition: all 0.2s;
+}
+.day-dot.g4 { background: #1B8833; color: #fff; }
+.day-dot.g3 { background: #34C759; color: #fff; }
+.day-dot.g2 { background: #7DD48B; color: #fff; }
+.day-dot.g1 { background: #DCFCE4; color: #3D8B4A; }
+.day-dot.g0 { background: #F2F2F7; color: #C7C7CC; }
+.day-dot.gx { background: transparent; color: #E5E5EA; }
+.day-cell.today .day-dot { box-shadow: 0 0 0 3px rgba(0,122,255,0.35); }
+
+/* ── SOS ── */
+.sos-btn {
+  width: 100%; padding: 12px; border-radius: var(--r);
+  border: none; background: #FFF3E0;
+  color: #E65100; font-size: 14px; font-weight: 600;
+  cursor: pointer; text-align: center;
+  transition: all 0.15s;
+}
+.sos-btn:active { background: #FFE0B2; }
+
+/* ── SHEET ── */
+.sheet-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 100; display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.sheet-overlay.show { opacity: 1; pointer-events: auto; }
+.sheet {
+  background: #F2F2F7; border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 440px; max-height: 75vh;
+  overflow-y: auto; padding: 0 16px 32px;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.sheet-overlay.show .sheet { transform: translateY(0); }
+.sheet .bar { width: 36px; height: 5px; background: #C7C7CC; border-radius: 3px; margin: 8px auto 16px; }
+.sheet h3 { font-size: 22px; font-weight: 700; text-align: center; }
+.sheet .sheet-icon { font-size: 40px; text-align: center; margin: 8px 0; }
+.sheet .sheet-section { margin-top: 16px; }
+.sheet .sheet-section h4 { font-size: 13px; font-weight: 600; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.sheet .sheet-section p, .sheet .sheet-section li { font-size: 15px; line-height: 1.6; color: var(--text); }
+.sheet .sheet-section ol { padding-left: 20px; }
+.sheet .sheet-section li { margin-bottom: 6px; }
+.sheet .sheet-fallback {
+  background: #FFF3E0; border-radius: var(--r);
+  padding: 12px 14px; margin-top: 12px;
+  font-size: 14px; color: #E65100; line-height: 1.5;
+}
+.sheet .btn-close {
+  width: 100%; padding: 14px; border-radius: var(--r);
+  background: var(--card); border: none;
+  font-size: 15px; font-weight: 600; margin-top: 20px;
+  cursor: pointer; color: var(--text);
+}
+.sheet .btn-close:active { background: #E5E5EA; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+  background: #1C1C1E; color: #fff; padding: 9px 18px;
+  border-radius: 20px; font-size: 13px; font-weight: 500;
+  z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.toast.show { opacity: 1; }
+.toast.gold { background: var(--gold); }
+
+/* ── CELEBRATION ── */
+.celebrate {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none; z-index: 300;
+}
+.confetti {
+  position: absolute; font-size: 28px;
+  animation: confettiFall 1s ease-out forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translateY(140px) rotate(200deg) scale(0.2); opacity: 0; }
+}
+@keyframes ringPulse {
+  0%, 100% { transform: rotate(-90deg) scale(1); }
+  50% { transform: rotate(-90deg) scale(1.08); }
+}
+</style>
+</head>
+<body>
+
+<div class="celebrate" id="celebrate"></div>
+
+<!-- ── TOP BAR ── -->
+<div class="top-bar">
+  <div class="tb-left">
+    <div class="tb-tag" id="phaseTag">Phase 1 · 习惯建立</div>
+    <h1>今日打卡</h1>
+    <div class="tb-date"><span id="dowText"></span></div>
+    <div class="tb-streak">连续 <strong id="streakNum" style="color:var(--text);">0</strong> 天</div>
+  </div>
+  <div class="mini-ring-wrap">
+    <svg width="48" height="48" viewBox="0 0 48 48">
+      <circle cx="24" cy="24" r="20" fill="none" stroke="#E9ECEF" stroke-width="4.5"/>
+      <circle id="ringPath" cx="24" cy="24" r="20" fill="none" stroke="#34C759" stroke-width="4.5"
+        stroke-linecap="round" stroke-dasharray="125.7" stroke-dashoffset="125.7"
+        transform="rotate(-90 24 24)"
+        style="transition: stroke-dashoffset 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), stroke 0.4s;"/>
+    </svg>
+    <div class="mini-ring-right">
+      <div class="mini-ring-pct" id="ringPct">0/4</div>
+      <div class="mini-ring-msg" id="ringMsg">完成2项达标</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PHASE TOGGLE ── -->
+<div class="phase-toggle" id="phaseToggle" onclick="togglePhase()">
+  <span class="pt-arrow">▶</span> 阶段目标
+</div>
+<div class="phase-body" id="phaseBody"></div>
+
+<!-- ── TASKS ── -->
+<div class="sec">每日任务</div>
+<div id="taskList"></div>
+
+<!-- ── TIP ── -->
+<div class="tip-banner" id="tipBanner">
+  <span class="tip-icon">💡</span>
+  <span id="tipText">点击卡片完成任务 · ⓘ 查看每一步的详细做法</span>
+</div>
+
+<!-- ── WEEK ── -->
+<div class="sec">最近 7 天</div>
+<div class="week-grid" id="weekGrid"></div>
+
+<button class="sos-btn" onclick="openSOS()">🆘 今天状态不好 · 降级模式</button>
+
+<!-- GUIDE -->
+<div class="sheet-overlay" id="guideSheet">
+  <div class="sheet">
+    <div class="bar"></div>
+    <div class="sheet-icon" id="gsIcon"></div>
+    <h3 id="gsTitle"></h3>
+    <div id="gsContent"></div>
+    <button class="btn-close" onclick="closeGuide()">关闭</button>
+  </div>
+</div>
+
+<!-- SOS -->
+<div class="sheet-overlay" id="sosSheet">
+  <div class="sheet">
+    <div class="bar"></div>
+    <h3 style="margin-bottom:4px;">降级模式</h3>
+    <div style="font-size:13px;color:var(--sub);text-align:center;margin-bottom:16px;">不做评判。只选今天能做的最小一件事</div>
+    <div style="display:flex;flex-direction:column;gap:6px;" id="sosList"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn-close" style="flex:1;margin-top:0;" onclick="closeSOS()">取消</button>
+      <button style="flex:1;padding:14px;border-radius:var(--r);background:var(--gold);color:#fff;border:none;font-size:15px;font-weight:600;cursor:pointer;" onclick="confirmSOS()">就做这一件</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CIRCLE_NEW = 125.7;
+let openCards = new Set();
+let phaseOpen = false;
+
+const PHASES = {
+  1: {
+    name: 'Phase 1 · 习惯建立', week: '第 1–4 周',
+    goals: ['早餐每天吃，空腹不发黑','快走 30 分钟微喘能说话','体态+腰背操每天一次','腿部塑形隔天完成','12 点前睡'],
+    weight: '体重目标：81 → 79 kg · 大腿围 70–74 → 69–72 cm', threshold: 28,
+  },
+  2: {
+    name: 'Phase 2 · 加速改善', week: '第 5–8 周',
+    goals: ['蛋白质 ≥130g/天','腿部动作加量（深蹲 3×20）','加入烟酰胺+维C，痘痘减少','HIIT 每周 1 次'],
+    weight: '体重目标：79 → 75 kg · 大腿围 68–71 cm', threshold: 56,
+  },
+  3: {
+    name: 'Phase 3 · 巩固优化', week: '第 9–12 周',
+    goals: ['体重降至 72–73 kg','大腿围减 3–5 cm','肤色均匀，痘印淡化','体态挺拔、精力稳定'],
+    weight: '体重目标：75 → 72 kg · 大腿围 66–69 cm', threshold: 84,
+  },
+};
+
+function currentPhase() {
+  const start = new Date(data.startDate);
+  const now = new Date();
+  const days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  if (days < PHASES[1].threshold) return 1;
+  if (days < PHASES[2].threshold) return 2;
+  return 3;
+}
+
+const TASKS = [
+  {
+    id: 'breakfast', type: 'toggle',
+    name: '早餐', icon: '🥚',
+    sub: '2 鸡蛋 + 牛奶 / 玉米包子',
+    fallback: '喝杯牛奶吃个蛋就算完成',
+    tip_doing: '早餐是治空腹眼前发黑的钥匙。不饿也要吃一点。',
+    tip_done: '今天不会空腹发黑了。血糖平稳，精力稳定。',
+    guide: {
+      why: '你长期不吃早餐，干活时容易低血糖眼前发黑。规律早餐能稳定血糖，也减少午餐暴食。',
+      how: ['标准版：煮鸡蛋×2 + 纯牛奶 200ml + 玉米/红薯/包子一个','快简版：牛奶 + 2 个水煮蛋','时间：8:00–8:30 之间吃完','下午 15:30 加餐：无糖酸奶 100g 或茶叶蛋 1 个'],
+      tip: '跟家人说"帮我多煮两个鸡蛋"，早餐就不愁了。',
+    }
+  },
+  {
+    id: 'cardio', type: 'toggle',
+    name: '快走', icon: '🏃',
+    sub: '晚饭后 30 分钟 · 微喘能说话',
+    fallback: '出门走 10 分钟就算完成',
+    tip_doing: '快走时用"说话测试"——能说短句但不能唱歌。',
+    tip_done: '全身减脂进行中。大腿变细靠的就是这一步+腿部训练。',
+    guide: {
+      why: '全身减脂是唯一能缩小大腿围的途径。快走是零门槛、零器材、不伤膝的有氧。',
+      how: ['时间：晚饭后 30 分钟出门最佳','强度：微喘但能说话（RPE 5–6）','安全：绝不空腹走；起身放慢；头晕立即停','进阶：Phase 1 每天 30 分钟 → Phase 2 加到 35–40 分钟'],
+      tip: '先喝半杯水再出门。脚跟先落地，穿有缓冲的鞋。',
+    }
+  },
+  {
+    id: 'posture', type: 'expand',
+    name: '体态+腰背操', icon: '🧍',
+    sub: '站立/靠墙 4 步 · 约 10 分钟',
+    fallback: '靠墙站 1 分钟就算完成',
+    children: [
+      { id: 'p1', text: '靠墙站立 · 3 分钟' },
+      { id: 'p2', text: '胸大肌拉伸 · 30 秒 × 2 侧' },
+      { id: 'p3', text: '下巴后缩 · 10 次 × 2 组' },
+      { id: 'p4', text: '扶墙平板支撑 · 2 × 20–30 秒' },
+    ],
+    tip_doing: '全部站立/靠墙完成，不需要垫子。做不完 4 步没关系，先做靠墙站立。',
+    tip_done: '含胸驼背和干活后的腰酸，都在这 10 分钟里被慢慢修复。',
+    guide: {
+      why: '你的含胸驼背+肩颈前伸是"上交叉综合征"；机加工久站让腰背紧张。这套操同时护腰+开肩。',
+      how: ['1. 靠墙站立：后脑勺+肩胛+臀+脚跟贴墙，收腹收下巴','2. 胸大肌拉伸：手臂 120° 扶门框/墙，身体前转，胸前有牵拉','3. 下巴后缩：下巴水平向后收，像做双下巴','4. 扶墙平板：双手扶墙、身体一条线、收腹不塌腰'],
+      tip: '可拆成早晚各 5 分钟。腰酸重的时候，至少做完靠墙站立。',
+    }
+  },
+  {
+    id: 'legs', type: 'toggle',
+    name: '腿部塑形', icon: '🦵',
+    sub: '隔天做 · 深蹲 / 弓步 / 后踢腿',
+    fallback: '做 5 个深蹲就算完成',
+    tip_doing: '今天轮到你练腿。大腿变细=全身减脂+腿部紧实。',
+    tip_done: '臀腿肌群是最大燃脂引擎，练了就在为减围攒进度。',
+    guide: {
+      why: '不存在局部减脂，大腿变细靠全身减脂 + 腿部训练把肌肉练紧实。',
+      how: ['自重深蹲 3×15：脚与肩宽，屁股往后坐，膝盖不内扣','反向弓步 2×10/腿：后膝轻触地，前膝不超脚尖','站姿后踢腿（扶墙）2×15/腿：臀部发力，腿向后上方踢','全部站立完成，不需要垫子；隔天一次，组间休息 45 秒'],
+      tip: '膝盖不舒服就减少幅度。深蹲前先做 5 个靠墙静蹲热身。',
+    }
+  },
+  {
+    id: 'skin', type: 'half',
+    name: '保湿+防晒', icon: '🧴',
+    sub: '早：洁面→保湿→防晒 · 晚：洁面→保湿',
+    fallback: '涂一层保湿乳就算完成',
+    tip_half: '早上 ☀️ 已搞定。晚上别忘了——洗掉一天的油脂再涂保湿乳。',
+    tip_done: '防晒是淡痘印的第一手段。今天这层防晒在帮你拦住褐印。',
+    guide: {
+      why: '防晒是淡化痘印的第一手段——紫外线会把红印"烤"成褐印。保湿防止代偿性出油。',
+      how: ['早上（3 步/3 分钟）：溪木源洁面 30 秒 → 保湿乳黄豆大小涂开 → 防晒一元硬币大小，等 2 分钟成膜','晚上（2 步/2 分钟）：洁面多揉 10 秒 → 保湿乳','每周 1 次水杨酸棉片（不出门那天）：擦 T 区和痘痘处，避开眼周','眼角：不揉不抓，可薄涂保湿乳，9 月中旬前就医'],
+      tip: '防晒量要够：一元硬币大小。眼角过渡期不涂功效产品。',
+    }
+  },
+  {
+    id: 'sleep', type: 'toggle',
+    name: '12 点前睡', icon: '😴',
+    sub: '第一周 12:30 → 第二周起 12:00',
+    fallback: '比昨晚早睡 20 分钟就算完成',
+    tip_doing: '手机放远、23:30 闹钟响就关内容流。',
+    tip_done: '今天没有睡前刷到停不下来。作息在往健康方向走。',
+    guide: {
+      why: '你 1 点睡+白天犯困+皮肤出油都和晚睡有关。12 点前睡是睡眠改善的第一步。',
+      how: ['23:30 闹钟=内容时间结束，关掉视频/浏览','手机充电放书桌或客厅，不带上床','睡前 30 分钟可听音频/播客或做体态操','第一周目标 12:30 前，第二周起 12:00 前'],
+      tip: '连续 7 天达标有里程碑。偶尔破例不评判，第二天继续。',
+    }
+  },
+];
+
+function TK() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function dowLabel() {
+  const d = new Date();
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 星期${['日','一','二','三','四','五','六'][d.getDay()]}`;
+}
+
+function load() {
+  try { const r = localStorage.getItem('ht_v5'); if (r) return JSON.parse(r); } catch(e) {}
+  return { logs: {}, startDate: TK(), bestStreak: 0 };
+}
+function save(d) { localStorage.setItem('ht_v5', JSON.stringify(d)); }
+
+let data = load();
+
+function todayLog() {
+  const k = TK();
+  if (!data.logs[k]) data.logs[k] = {};
+  return data.logs[k];
+}
+
+function taskScore(log, task) {
+  if (task.type === 'toggle') return log[task.id] ? 1 : 0;
+  if (task.type === 'half')   return (log[task.id] || 0) / 2;
+  if (task.type === 'expand') {
+    if (!log[task.id]) return 0;
+    const d = task.children.filter(c => log[task.id][c.id]).length;
+    return d >= 3 ? 1 : d / 5;
+  }
+  return 0;
+}
+
+function taskDone(log, task) {
+  if (task.type === 'toggle') return !!log[task.id];
+  if (task.type === 'half')   return (log[task.id] || 0) >= 2;
+  if (task.type === 'expand') {
+    if (!log[task.id]) return false;
+    return task.children.filter(c => log[task.id][c.id]).length >= 3;
+  }
+  return false;
+}
+
+function taskHalfDone(log, task) {
+  if (task.type === 'half') return (log[task.id] || 0) === 1;
+  if (task.type === 'expand') {
+    if (!log[task.id]) return false;
+    const d = task.children.filter(c => log[task.id][c.id]).length;
+    return d > 0 && d < 3;
+  }
+  return false;
+}
+
+function totalScore(log) {
+  return TASKS.reduce((s, t) => s + taskScore(log, t), 0);
+}
+
+function streak() {
+  let s = 0; const d = new Date();
+  for (let i = 0; i < 365; i++) {
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (!data.logs[k]) break;
+    if (totalScore(data.logs[k]) >= 2) s++; else break;
+    d.setDate(d.getDate() - 1);
+  }
+  return s;
+}
+
+// ==================== RENDER ====================
+let prevFullDone = false;
+
+function render() {
+  const log = todayLog();
+  const score = totalScore(log);
+  const st = streak();
+  if (st > data.bestStreak) data.bestStreak = st;
+  save(data);
+
+  const ph = currentPhase();
+  const allDone = TASKS.every(t => taskDone(log, t));
+
+  document.getElementById('phaseTag').textContent = PHASES[ph].name;
+  document.getElementById('dowText').textContent = dowLabel();
+  document.getElementById('streakNum').textContent = st;
+
+  // Phase body
+  document.getElementById('phaseBody').innerHTML = `
+    <div class="phase-head">${PHASES[ph].week} · 阶段目标</div>
+    ${PHASES[ph].goals.map(g => `<div class="phase-goal"><span class="pg-dot">●</span>${g}</div>`).join('')}
+    <div class="phase-weight">${PHASES[ph].weight}</div>`;
+
+  // Mini ring
+  const pct = Math.min(score / TASKS.length, 1);
+  const ringPath = document.getElementById('ringPath');
+  const ringMsg = document.getElementById('ringMsg');
+
+  ringPath.style.strokeDashoffset = CIRCLE_NEW - (CIRCLE_NEW * pct);
+
+  if (allDone) {
+    ringPath.style.stroke = '#FF9500';
+    ringMsg.textContent = '🔥 全勤';
+    if (!prevFullDone) {
+      ringPath.parentElement.style.animation = 'ringPulse 0.6s ease-in-out 2';
+      celebrate(true);
+      setTimeout(() => ringPath.parentElement.style.animation = '', 1200);
+    }
+  } else {
+    ringPath.style.stroke = '#34C759';
+    const rounded = Math.round(score * 10) / 10;
+    document.getElementById('ringPct').textContent = `${rounded}/${TASKS.length}`;
+    ringMsg.textContent = rounded >= 2 ? '✅ 达标' : `差${Math.ceil(2-rounded)}项`;
+  }
+  prevFullDone = allDone;
+
+  // Tasks
+  document.getElementById('taskList').innerHTML = TASKS.map(t => renderTask(t, log)).join('');
+
+  // Tip
+  renderTip(log, allDone);
+
+  // Week
+  renderWeek();
+
+  // Restore expand
+  openCards.forEach(id => {
+    const card = document.querySelector(`.expand-card[data-id="${id}"]`);
+    if (card) card.classList.add('open');
+  });
+
+  document.querySelectorAll('.expand-head').forEach(h => {
+    h.onclick = function(e) {
+      if (e.target.closest('.t-info')) return;
+      const id = this.parentElement.dataset.id;
+      if (openCards.has(id)) openCards.delete(id);
+      else openCards.add(id);
+      this.parentElement.classList.toggle('open');
+    };
+  });
+}
+
+function renderTask(t, log) {
+  const isDone = taskDone(log, t);
+  const isHalf = taskHalfDone(log, t);
+  const info = `<div class="t-info" onclick="event.stopPropagation();openGuide('${t.id}')">ⓘ</div>`;
+
+  if (t.type === 'toggle') {
+    return `
+      <div class="task-card ${isDone ? 'done' : ''}">
+        <div class="t-icon">${t.icon}</div>
+        <div class="t-body" onclick="toggleTask('${t.id}')">
+          <div class="t-name">${t.name}</div>
+          <div class="t-sub">${isDone ? '✅ 已完成' : t.sub}</div>
+        </div>
+        ${info}
+        <div class="check-circle" onclick="toggleTask('${t.id}')">${isDone ? '✓' : ''}</div>
+      </div>`;
+  }
+
+  if (t.type === 'half') {
+    const half = log[t.id] || 0;
+    let cls = 'task-card';
+    if (isDone) cls += ' done';
+    else if (isHalf) cls += ' half-done';
+    const subText = half === 0 ? t.sub : half === 1 ? '☀️ 早上已完成 · 晚上待完成' : '☀️ 早上 ✓  🌙 晚上 ✓';
+    return `
+      <div class="${cls}">
+        <div class="t-icon">${t.icon}</div>
+        <div class="t-body" onclick="toggleHalf('${t.id}')">
+          <div class="t-name">${t.name}</div>
+          <div class="t-sub">${subText}</div>
+        </div>
+        ${info}
+        <div class="half-wrap">
+          <div class="half-col">
+            <span class="half-label">☀️</span>
+            <div class="half-dot ${half >= 1 ? 'on' : ''}" onclick="event.stopPropagation();toggleHalf('${t.id}')"></div>
+          </div>
+          <div class="half-col">
+            <span class="half-label">🌙</span>
+            <div class="half-dot ${half >= 2 ? 'on' : ''}" onclick="event.stopPropagation();toggleHalf('${t.id}')"></div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  if (t.type === 'expand') {
+    const exLog = log[t.id] || {};
+    const childDone = t.children.filter(c => exLog[c.id]).length;
+    let cls = 'expand-card';
+    if (isDone) cls += ' done';
+    else if (isHalf) cls += ' half-done';
+    return `
+      <div class="${cls}" data-id="${t.id}">
+        <div class="expand-head">
+          <div class="t-icon">${t.icon}</div>
+          <div class="t-body">
+            <div class="t-name">${t.name}</div>
+            <div class="t-sub">${childDone}/3 达标 · ${t.sub}</div>
+          </div>
+          ${info}
+          <span class="expand-arrow">▼</span>
+        </div>
+        <div class="expand-body">
+          ${t.children.map(c => {
+            const d = !!exLog[c.id];
+            return `<div class="sub-item ${d ? 'done' : ''}" onclick="event.stopPropagation();toggleSub('${t.id}','${c.id}')">
+              <div class="mini-check">${d ? '✓' : ''}</div>${c.text}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+  return '';
+}
+
+function renderTip(log, allDone) {
+  const banner = document.getElementById('tipBanner');
+  const tipText = document.getElementById('tipText');
+  if (allDone) {
+    banner.className = 'tip-banner done-all';
+    banner.querySelector('.tip-icon').textContent = '🏆';
+    tipText.textContent = '全部完成！今天你对自己兑现了承诺。明天继续保持这个节奏。';
+    return;
+  }
+  const halfDoneTasks = TASKS.filter(t => taskHalfDone(log, t) && !taskDone(log, t));
+  const doneTasks = TASKS.filter(t => taskDone(log, t));
+  const undoneTasks = TASKS.filter(t => !taskDone(log, t) && !taskHalfDone(log, t));
+  banner.className = 'tip-banner';
+  banner.querySelector('.tip-icon').textContent = '💡';
+  if (halfDoneTasks.length) {
+    const t = halfDoneTasks[0];
+    tipText.textContent = (t.tip_half || t.tip_doing);
+  } else if (doneTasks.length) {
+    tipText.textContent = doneTasks[doneTasks.length - 1].tip_done;
+  } else if (undoneTasks.length) {
+    tipText.textContent = undoneTasks[0].tip_doing;
+  } else {
+    tipText.textContent = '点击卡片完成任务 · ⓘ 查看每一步的详细做法';
+  }
+}
+
+function renderWeek() {
+  const grid = document.getElementById('weekGrid');
+  const today = TK();
+  const d = new Date(today);
+  d.setDate(d.getDate() - 6);
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const log = data.logs[k];
+    const score = log ? Math.round(totalScore(log)) : -1;
+    const isToday = k === today;
+    const lb = ['日','一','二','三','四','五','六'][d.getDay()];
+    const dt = d.getDate();
+    let g = 'day-dot';
+    if (score === -1) g += ' gx';
+    else if (score >= 4) g += ' g4';
+    else g += ` g${score}`;
+    html += `<div class="day-cell${isToday ? ' today' : ''}">
+      <div class="day-label">${lb}</div><div class="${g}">${dt}</div></div>`;
+    d.setDate(d.getDate() + 1);
+  }
+  grid.innerHTML = html;
+}
+
+// ── PHASE TOGGLE ──
+function togglePhase() {
+  phaseOpen = !phaseOpen;
+  document.getElementById('phaseBody').classList.toggle('open', phaseOpen);
+  document.getElementById('phaseToggle').classList.toggle('open', phaseOpen);
+}
+
+// ── TASK ACTIONS ──
+function toggleTask(id) {
+  const log = todayLog();
+  const was = !!log[id];
+  log[id] = !log[id];
+  save(data); render();
+  if (!was && log[id]) {
+    celebrate(false);
+    toast(['很棒 🎉','拿下 ✅','做到了！','又近一步 ✨'][Math.floor(Math.random()*4)]);
+  }
+}
+
+function toggleHalf(id) {
+  const log = todayLog();
+  let v = log[id] || 0;
+  v = (v + 1) % 3;
+  log[id] = v;
+  save(data); render();
+  if (v === 1) toast('早上护肤 ☀️ 完成一半');
+  if (v === 2) { toast('早晚全勤 ✅'); celebrate(false); }
+}
+
+function toggleSub(taskId, childId) {
+  const log = todayLog();
+  if (!log[taskId]) log[taskId] = {};
+  log[taskId][childId] = !log[taskId][childId];
+  save(data);
+  openCards.add(taskId);
+  render();
+  const t = TASKS.find(x => x.id === taskId);
+  const childDone = t.children.filter(c => log[taskId][c.id]).length;
+  if (childDone === 3) { toast('体态矫正达标 🧍'); celebrate(false); }
+}
+
+// ── GUIDE ──
+function openGuide(id) {
+  const t = TASKS.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('gsIcon').textContent = t.icon;
+  document.getElementById('gsTitle').textContent = t.name;
+  document.getElementById('gsContent').innerHTML = `
+    <div class="sheet-section"><h4>为什么需要</h4><p>${t.guide.why}</p></div>
+    <div class="sheet-section"><h4>具体怎么做</h4><ol>${t.guide.how.map(s => `<li>${s}</li>`).join('')}</ol></div>
+    <div class="sheet-section"><h4>小提示</h4><p>${t.guide.tip}</p></div>
+    <div class="sheet-fallback">💡 <b>降级版：</b>${t.fallback}</div>`;
+  document.getElementById('guideSheet').classList.add('show');
+}
+function closeGuide() { document.getElementById('guideSheet').classList.remove('show'); }
+
+// ── SOS ──
+function openSOS() {
+  document.getElementById('sosList').innerHTML = TASKS.map(t =>
+    `<div style="background:var(--card);border-radius:var(--r);padding:14px;cursor:pointer;font-size:15px;display:flex;align-items:center;gap:10px;"
+         onclick="pickSOS(this,'${t.id}')">${t.icon} ${t.fallback}</div>`).join('');
+  document.getElementById('sosSheet').classList.add('show'); window._pick = null;
+}
+function pickSOS(el, id) {
+  document.querySelectorAll('#sosList > div').forEach(i => i.style.boxShadow = '');
+  el.style.boxShadow = '0 0 0 2px #FF9500'; window._pick = id;
+}
+function closeSOS() { document.getElementById('sosSheet').classList.remove('show'); }
+function confirmSOS() {
+  if (window._pick) {
+    const log = todayLog();
+    const t = TASKS.find(x => x.id === window._pick);
+    if (t.type === 'toggle') log[t.id] = true;
+    if (t.type === 'half') log[t.id] = (log[t.id] || 0) + 1;
+    if (t.type === 'expand') {
+      if (!log[t.id]) log[t.id] = {};
+      t.children.slice(0, 3).forEach(c => { log[t.id][c.id] = true; });
+    }
+    save(data); render();
+    toast('今天做这一件就够了 🤙'); celebrate(false);
+  }
+  closeSOS();
+}
+
+// ── CELEBRATION ──
+function celebrate(isFull) {
+  const el = document.getElementById('celebrate');
+  const emojis = isFull ? ['🏆','🔥','✨','💚','🌟','🎉','💪','✅'] : ['🎉','✨','🔥','💚','🌟','✅'];
+  let html = '';
+  const cx = window.innerWidth / 2;
+  for (let i = 0; i < (isFull ? 14 : 8); i++) {
+    const x = cx + (Math.random() - 0.5) * 200;
+    const y = 80 + Math.random() * 80;
+    const e = emojis[Math.floor(Math.random() * emojis.length)];
+    html += `<span class="confetti" style="left:${x}px;top:${y}px;font-size:${20+Math.random()*16}px;">${e}</span>`;
+  }
+  el.innerHTML = html;
+  setTimeout(() => el.innerHTML = '', 1100);
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  if (msg.includes('全勤')) el.classList.add('gold'); else el.classList.remove('gold');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ==================== INIT ====================
+render();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
