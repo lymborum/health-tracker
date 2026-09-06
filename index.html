@@ -118,6 +118,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","M
 <div class="view" id="dataView">
   <div class="topbar"><div class="back" onclick="goMain()">‹</div><div class="t">数据记录</div></div>
   <div id="metricList"></div>
+  <div style="text-align:center;padding:14px 0 4px"><button class="save" style="background:#fff;color:var(--sub);border:1px solid var(--line);padding:9px 20px;border-radius:10px;font-size:13px" onclick="exportData()">导出数据备份</button></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -280,6 +281,7 @@ function addMetric(id){const v=parseFloat(document.getElementById("in_"+id).valu
  data.metrics[id].push({d:today(),v:v});save();renderData();updateSummary();toast("已记录 "+v)
 }
 function undoMetric(id){if(!data.metrics[id]||!data.metrics[id].length)return;data.metrics[id].pop();save();renderData();updateSummary();toast("已撤销最近一条")}
+function exportData(){const blob=new Blob([JSON.stringify({logs:data.logs,metrics:data.metrics})],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="health-backup-"+today()+".json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000);toast("备份已导出")}
 function svgChart(pts){const w=300,h=40;const vs=pts.map(p=>p.v);
  const min=Math.min(...vs),max=Math.max(...vs),range=(max-min)||1;
  const x=i=>12+i*(w-24)/(pts.length-1),y=v=>h-7-(v-min)/range*(h-16);
