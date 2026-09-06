@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#F3F6F4">
 <title>健康管理</title>
 <link rel="manifest" href="manifest.json">
+<script src="https://static.cloudbase.net/cloudbase-js-sdk/1.7.2/cloudbase.full.js"></script>
 <style>
 @property --p{syntax:"<percentage>";initial-value:0%;inherits:false}
 :root{--bg:#F3F6F4;--card:#fff;--ink:#17211C;--sub:#84908A;--line:#E7EDE9;--green:#22B573;--green-bg:#E9F7F0;--amber:#F5A623;--amber-bg:#FDF3E2;--r:18px;--shadow:0 2px 12px rgba(23,33,28,.06)}
@@ -86,12 +87,35 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","M
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes pop{0%{transform:scale(.4)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
 @keyframes draw{to{stroke-dashoffset:0}}
+/* 登录 */
+.login{max-width:340px;margin:90px auto 0;padding:30px 24px;background:var(--card);border-radius:22px;box-shadow:var(--shadow);text-align:center}
+.login-ic{font-size:34px;margin-bottom:8px}
+.login-title{font-size:20px;font-weight:700}
+.login-sub{font-size:12px;color:var(--sub);margin:6px 0 18px;line-height:1.5}
+.login-input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:15px;margin-bottom:10px;background:#FAFCFB;outline:none;text-align:center}
+.login-input:focus{border-color:var(--green)}
+.login-btn{width:100%;padding:12px;border:none;border-radius:12px;background:var(--ink);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;transition:transform .15s}
+.login-btn:active{transform:scale(.97)}
+.login-btn.ghost{background:transparent;color:var(--green);border:1.5px solid var(--green)}
+.authmsg{font-size:12px;color:#D9822B;min-height:18px;margin-top:4px}
 .toast{position:fixed;left:50%;bottom:44px;transform:translateX(-50%) translateY(10px);background:rgba(23,33,28,.88);color:#fff;padding:10px 20px;border-radius:22px;font-size:13px;opacity:0;transition:.3s;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
+<div class="view" id="loginView">
+  <div class="login">
+    <div class="login-ic">📊</div>
+    <div class="login-title">健康管理</div>
+    <div class="login-sub">登录后，打卡与体重数据自动保存云端</div>
+    <input id="uName" class="login-input" placeholder="用户名" autocomplete="username">
+    <input id="uPass" class="login-input" type="password" placeholder="密码" autocomplete="current-password">
+    <button class="login-btn" onclick="doLogin()">登录</button>
+    <button class="login-btn ghost" onclick="doRegister()">注册新账号</button>
+    <div id="authMsg" class="authmsg"></div>
+  </div>
+</div>
 <div class="view on" id="mainView">
   <div class="hero">
     <div>
@@ -143,7 +167,59 @@ function weekNum(){const d=Math.floor((new Date()-new Date(WEEK_START))/864e5);r
 function isTrainDay(){const d=Math.floor((new Date()-new Date(WEEK_START))/864e5);return d%2===0}
 function load(){try{return JSON.parse(localStorage.getItem("tasks_v5"))||{logs:{},metrics:{}}}catch(e){return{logs:{},metrics:{}}}}
 let data=load();
-function save(){localStorage.setItem("tasks_v5",JSON.stringify(data))}
+function save(){localStorage.setItem("tasks_v5",JSON.stringify(data));schedulePush()}
+/* ── 云端同步（CloudBase） ── */
+let cAuth=null,db=null,cbReady=false,pushTimer=null;
+function showMain(){document.getElementById("loginView").classList.remove("on");document.getElementById("mainView").classList.add("on")}
+function showLogin(){document.getElementById("mainView").classList.remove("on");document.getElementById("loginView").classList.add("on")}
+function authMsg(t){document.getElementById("authMsg").textContent=t||""}
+function initCloud(){
+ if(typeof cloudbase==="undefined"){return}
+ try{
+  const app=cloudbase.init({env:"health-d9g6tpy00e25afa7a"});
+  cAuth=app.auth({persistence:"local"});
+  db=app.database();
+  cAuth.onLoginStateChanged(state=>{
+   cbReady=true;
+   if(state){showMain();syncCloud()}
+   else{showLogin()}
+  });
+ }catch(e){cbReady=false}
+}
+function schedulePush(){if(!cbReady)return;clearTimeout(pushTimer);pushTimer=setTimeout(pushAll,1200)}
+async function pushAll(){
+ if(!cbReady)return;
+ try{
+  const ch=db.collection("checkins"),me=db.collection("metrics");
+  for(const date of Object.keys(data.logs||{})){await ch.doc(date).set({date,log:data.logs[date]})}
+  for(const type of Object.keys(data.metrics||{})){await me.doc(type).set({type,records:data.metrics[type]})}
+ }catch(e){}
+}
+async function syncCloud(){
+ if(!cbReady)return;
+ try{
+  const [c1,c2]=await Promise.all([db.collection("checkins").limit(1000).get(),db.collection("metrics").limit(1000).get()]);
+  let changed=false;
+  (c1.data||[]).forEach(d=>{if(d.date&&d.log&&!data.logs[d.date]){data.logs[d.date]=d.log;changed=true}});
+  (c2.data||[]).forEach(d=>{if(d.type&&d.records&&!data.metrics[d.type]){data.metrics[d.type]=d.records;changed=true}});
+  if(changed){localStorage.setItem("tasks_v5",JSON.stringify(data))}
+  render();
+  await pushAll();
+ }catch(e){}
+}
+async function doLogin(){const u=document.getElementById("uName").value.trim(),p=document.getElementById("uPass").value;
+ if(!u||!p){authMsg("请输入用户名和密码");return}
+ authMsg("登录中…");
+ try{await cAuth.usernameAuthProvider().signIn(u,p);authMsg("")}
+ catch(e){authMsg("登录失败，请检查用户名密码；没账号先点下方注册")}
+}
+async function doRegister(){const u=document.getElementById("uName").value.trim(),p=document.getElementById("uPass").value;
+ if(u.length<2){authMsg("用户名至少 2 个字符");return}
+ if(p.length<6){authMsg("密码至少 6 位");return}
+ authMsg("注册中…");
+ try{await cAuth.usernameAuthProvider().signUp(u,p);authMsg("注册成功，正在进入…")}
+ catch(e){authMsg("注册失败：该用户名可能已存在，直接点上方登录试试")}
+}
 function dayLog(){const k=today();if(!data.logs[k])data.logs[k]={};return data.logs[k]}
 function skinState(log){const s=log.skin||0;return{am:s>=1,pm:s>=2,total:s}}
 function gotToday(log){let c=0;if(log.breakfast)c++;if(log.walk)c++;if(isTrainDay()&&log.strength)c++;c+=(log.skin||0);if(log.bedtime)c++;return c}
@@ -253,6 +329,7 @@ function svgChart(pts){const w=300,h=40;const vs=pts.map(p=>p.v);
 function toast(t){const e=document.getElementById("toast");e.textContent=t;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),1500)}
 seedBaseline();
 render();
+initCloud();
 </script>
 </body>
 </html>
